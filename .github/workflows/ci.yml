@@ -7,7 +7,20 @@ on:
   pull_request:
 
 jobs:
-  ci:
+  # Job 1: Lint（代码风格检查）
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install ruff
+      - run: ruff check .
+      - run: ruff format --check .
+
+  # Job 2: Test（运行测试）
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -15,6 +28,16 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install -r requirements.txt
-      - run: ruff check .
-      - run: ruff format --check .
       - run: pytest --tb=short
+
+  # Job 3: Build（构建产物）—— 依赖 lint 和 test 都通过
+  build:
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install build
+      - run: python -m build
