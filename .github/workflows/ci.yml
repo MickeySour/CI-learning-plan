@@ -14,11 +14,11 @@ jobs:
       matrix:
         python-version: ["3.10","3.11"]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      # 调用自定义 Composite Action，替代原来 4 个重复步骤
+      - uses: ./.github/actions/setup-python-env
         with:
-          python-version: ${{matrix.python-version}}
-      - run: pip install ruff
+          python-version: ${{ matrix.python-version }}
+          install-cmd: "pip install ruff"
       - run: ruff check .
       - run: ruff format --check .
 
@@ -26,18 +26,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-#     这里是添加了缓存
-      - uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip           # pip 下载缓存目录
-          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}  # 用 requirements.txt 的哈希做 key
-          restore-keys: | 
-            ${{ runner.os }}-pip-
-      - run: pip install -r requirements.txt
+      - uses: ./.github/actions/setup-python-env
       - run: pytest --tb=short
 
   # Job 3: Build（构建产物）—— 依赖 lint 和 test 都通过
@@ -45,15 +34,7 @@ jobs:
     needs: [lint, test]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: ./.github/actions/setup-python-env
         with:
-          python-version: "3.11"
-      - uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-      - run: pip install build
+          install-cmd: "pip install build"
       - run: python -m build

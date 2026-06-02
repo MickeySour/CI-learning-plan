@@ -1,0 +1,34 @@
+# Composite Action：封装 checkout + setup python + cache + install 四个重复步骤
+name: "Setup Python Env"
+description: "Checkout code, setup Python, cache pip, install dependencies"
+
+# inputs 就像函数参数，调用时可以传值，也可以用默认值
+inputs:
+  python-version:
+    description: "Python version to use"
+    required: false
+    default: "3.11"
+  install-cmd:
+    description: "pip install command"
+    required: false
+    default: "pip install -r requirements.txt"
+
+runs:
+  using: "composite"    # 声明这是 Composite Action
+  steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    # composite action 中的 run 必须显式指定 shell
+    - run: ${{ inputs.install-cmd }}
+      shell: bash
