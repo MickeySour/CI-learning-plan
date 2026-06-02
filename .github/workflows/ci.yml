@@ -14,7 +14,7 @@ jobs:
       matrix:
         python-version: ["3.10","3.11"]
     steps:
-      # 调用自定义 Composite Action，替代原来 4 个重复步骤
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-python-env
         with:
           python-version: ${{ matrix.python-version }}
@@ -26,6 +26,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-python-env
       - run: pytest --tb=short
 
@@ -34,6 +35,7 @@ jobs:
     needs: [lint, test]
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-python-env
         with:
           install-cmd: "pip install build"
